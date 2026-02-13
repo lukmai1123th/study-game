@@ -2,30 +2,25 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reading Ladder Game</title>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <style>
-*{box-sizing:border-box}
-
+*{box-sizing:border-box;margin:0;padding:0}
 body{
-margin:0;
 font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 background:linear-gradient(160deg,#6dd5ed,#2193b0);
-color:white;
 display:flex;
 justify-content:center;
+align-items:center;
 min-height:100vh;
-padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);
+color:white;
 }
 
 .app{
 width:100%;
 max-width:480px;
+padding:15px;
 }
 
 .card{
@@ -34,49 +29,21 @@ color:#333;
 border-radius:20px;
 padding:20px;
 box-shadow:0 10px 25px rgba(0,0,0,.2);
-margin-top:20px;
 }
 
-h2{margin-top:0}
-
-input{
-width:100%;
-padding:12px;
-margin:8px 0;
-border-radius:12px;
-border:1px solid #ccc;
-font-size:16px;
-}
-
-button{
-width:100%;
-padding:14px;
-border:none;
-border-radius:15px;
-font-size:16px;
-font-weight:bold;
-margin:6px 0;
-background:#ff9800;
-color:white;
-transition:.2s;
-}
-
-button:active{
-transform:scale(.95);
-background:#e68900;
-}
+h2{text-align:center;margin-bottom:10px}
 
 .stats{
 text-align:center;
-font-size:15px;
 margin-bottom:10px;
+font-weight:bold;
 }
 
 .board{
 display:grid;
 grid-template-columns:repeat(5,1fr);
 gap:6px;
-margin-top:10px;
+margin:10px 0;
 }
 
 .cell{
@@ -88,12 +55,11 @@ align-items:center;
 justify-content:center;
 font-weight:bold;
 position:relative;
-font-size:14px;
 }
 
 .player{
-width:18px;
-height:18px;
+width:20px;
+height:20px;
 background:red;
 border-radius:50%;
 position:absolute;
@@ -106,13 +72,29 @@ animation:pop .3s ease;
 100%{transform:scale(1)}
 }
 
-.rank{
-text-align:center;
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:15px;
+font-size:16px;
 font-weight:bold;
-margin-top:5px;
+margin:6px 0;
+background:#ff9800;
+color:white;
 }
 
-.logout{
+button:active{
+transform:scale(.95);
+background:#e68900;
+}
+
+.rank{
+text-align:center;
+margin-top:5px;
+font-weight:bold;
+}
+.reset{
 background:#f44336;
 }
 </style>
@@ -120,22 +102,13 @@ background:#f44336;
 <body>
 
 <div class="app">
+<div class="card">
 
-<div id="loginBox" class="card">
-<h2>📚 Login</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<input type="text" id="studentId" placeholder="Student ID">
-<button onclick="login()">Login / Register</button>
-</div>
-
-<div id="gameBox" class="card" style="display:none;">
 <h2>🎮 Reading Ladder</h2>
 
 <div class="stats">
 ⭐ แต้ม: <span id="points">0</span><br>
-🏆 Level: <span id="level">1</span><br>
-👤 <span id="userEmail"></span>
+🏆 Level: <span id="level">1</span>
 </div>
 
 <div class="board" id="board"></div>
@@ -149,32 +122,32 @@ Weekly Rank: <span id="weeklyRank">None</span>
 <button onclick="addPoints(2)">อ่าน 45 นาที (+2)</button>
 <button onclick="addPoints(3)">ครบทุกอย่างวันนี้ (+3)</button>
 
-<button class="logout" onclick="logout()">Logout</button>
-</div>
+<button class="reset" onclick="resetGame()">Reset</button>
 
+</div>
 </div>
 
 <script>
-// ===== Firebase Config =====
-const firebaseConfig={
-apiKey:"YOUR_KEY",
-authDomain:"YOUR_DOMAIN",
-databaseURL:"YOUR_DB_URL",
-projectId:"YOUR_ID"
-};
+let points = localStorage.getItem("points") ? parseInt(localStorage.getItem("points")) : 0;
+let weekly = localStorage.getItem("weekly") ? parseInt(localStorage.getItem("weekly")) : 0;
 
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.database();
+const board = document.getElementById("board");
 
-// ===== สร้างบอร์ด 25 ช่อง =====
-const board=document.getElementById("board");
+// สร้างบอร์ด 25 ช่อง
 for(let i=1;i<=25;i++){
 let cell=document.createElement("div");
 cell.className="cell";
 cell.id="cell"+i;
 cell.innerText=i;
 board.appendChild(cell);
+}
+
+function updateUI(){
+document.getElementById("points").innerText=points;
+let level=Math.floor(points/5)+1;
+document.getElementById("level").innerText=level;
+movePlayer(level);
+updateWeekly();
 }
 
 function movePlayer(level){
@@ -185,80 +158,29 @@ player.className="player";
 document.getElementById("cell"+pos).appendChild(player);
 }
 
-// ===== Login =====
-function login(){
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
-const studentId=document.getElementById("studentId").value;
-
-auth.signInWithEmailAndPassword(email,password)
-.catch(()=>{
-auth.createUserWithEmailAndPassword(email,password)
-.then(user=>{
-db.ref("users/"+user.user.uid).set({
-email:email,
-studentId:studentId,
-points:0,
-weeklyPoints:0
-});
-});
-});
-}
-
-auth.onAuthStateChanged(user=>{
-if(user){
-loginBox.style.display="none";
-gameBox.style.display="block";
-userEmail.innerText=user.email;
-loadData(user.uid);
-}
-});
-
-// ===== โหลดข้อมูล =====
-function loadData(uid){
-db.ref("users/"+uid).on("value",snap=>{
-let data=snap.val();
-if(data){
-points.innerText=data.points;
-let level=Math.floor(data.points/5)+1;
-levelSpan=level;
-document.getElementById("level").innerText=level;
-movePlayer(level);
-updateWeekly(data.weeklyPoints);
-}
-});
-}
-
-// ===== เพิ่มแต้ม =====
 function addPoints(p){
-let user=auth.currentUser;
-if(!user) return;
-
-let ref=db.ref("users/"+user.uid);
-ref.once("value").then(snap=>{
-let d=snap.val();
-ref.update({
-points:d.points+p,
-weeklyPoints:d.weeklyPoints+p
-});
-});
+points+=p;
+weekly+=p;
+localStorage.setItem("points",points);
+localStorage.setItem("weekly",weekly);
+updateUI();
 }
 
-// ===== Weekly Rank =====
-function updateWeekly(wp){
+function updateWeekly(){
 let rank="None";
-if(wp>=20) rank="Platinum 🏆";
-else if(wp>=15) rank="Gold 🥇";
-else if(wp>=10) rank="Silver 🥈";
-else if(wp>=5) rank="Bronze 🥉";
-weeklyRank.innerText=rank;
+if(weekly>=20) rank="Platinum 🏆";
+else if(weekly>=15) rank="Gold 🥇";
+else if(weekly>=10) rank="Silver 🥈";
+else if(weekly>=5) rank="Bronze 🥉";
+document.getElementById("weeklyRank").innerText=rank;
 }
 
-// ===== Logout =====
-function logout(){
-auth.signOut();
+function resetGame(){
+localStorage.clear();
 location.reload();
 }
+
+updateUI();
 </script>
 
 </body>
