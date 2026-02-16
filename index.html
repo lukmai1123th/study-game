@@ -3,241 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>บันไดนักอ่าน Mobile</title>
+    <title>Reading Quest Master</title>
     <style>
         :root {
-            --main-bg: #fdf6e3;
-            --primary: #ff9800;
-            --secondary: #4caf50;
-            --text: #5d4037;
-            --step-inactive: #fff9c4;
-            --step-active: #ffeb3b;
-            --step-done: #c8e6c9;
+            --sky: #a1c4fd;
+            --grass: #81c784;
+            --gold: #fbc02d;
+            --silver: #b0bec5;
+            --bronze: #a1887f;
+            --dark: #4e342e;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
 
         body {
-            font-family: 'Kanit', sans-serif;
-            background: linear-gradient(180deg, #a1c4fd 0%, #c2e9fb 100%);
             margin: 0;
-            padding: 10px;
+            background: linear-gradient(180deg, var(--sky) 0%, #c2e9fb 100%);
+            color: var(--dark);
             display: flex;
             justify-content: center;
-            color: var(--text);
+            min-height: 100vh;
         }
 
-        .app-card {
+        .app-container {
             width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 25px;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
             padding: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            min-height: 95vh;
             display: flex;
             flex-direction: column;
-        }
-
-        h2 { text-align: center; margin: 10px 0; font-size: 1.4rem; color: #ef6c00; }
-
-        /* ส่วนหัวบอกคะแนน */
-        .score-panel {
-            background: white;
-            border-radius: 15px;
-            padding: 10px;
-            text-align: center;
-            border: 2px solid var(--primary);
-            margin-bottom: 15px;
-        }
-
-        .score-num { font-size: 2rem; font-weight: bold; color: var(--primary); }
-
-        /* บันไดแบบประหยัดพื้นที่ */
-        .ladder-scroll {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            padding-right: 5px;
-            border-radius: 10px;
-        }
-
-        .ladder {
-            display: flex;
-            flex-direction: column-reverse;
-            gap: 4px;
-        }
-
-        .step {
-            height: 35px;
-            background: var(--step-inactive);
-            border: 1.5px solid #ffe082;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            padding: 0 12px;
-            font-size: 0.85rem;
             position: relative;
-            transition: 0.3s;
         }
 
-        .step.active {
-            background: var(--step-active);
-            border-color: #f57c00;
-            transform: scale(1.02);
-            font-weight: bold;
-            box-shadow: 0 0 8px rgba(255,152,0,0.4);
-        }
-
-        .step.done { background: var(--step-done); border-color: #81c784; opacity: 0.8; }
-
-        .player { position: absolute; right: 8px; font-size: 1.2rem; }
-
-        /* ส่วนปุ่มภารกิจ */
-        .task-list {
-            background: #fff;
-            border-radius: 15px;
-            padding: 10px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-        }
-
-        .task-item {
+        /* Header & DateTime */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .task-text { font-size: 0.85rem; flex: 1; padding-right: 5px; }
-
-        button {
-            padding: 6px 12px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: white;
             border-radius: 12px;
-            border: none;
-            background: var(--secondary);
-            color: white;
-            font-size: 0.8rem;
-            font-weight: bold;
-            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        button:disabled { background: #ddd; color: #888; }
+        #datetime { font-size: 0.85rem; font-weight: bold; color: #555; }
 
-        .footer-btns {
+        /* Stats Card */
+        .stats-card {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            border: 3px solid var(--gold);
+            margin-bottom: 15px;
+        }
+
+        .total-score { font-size: 2.5rem; font-weight: bold; color: var(--gold); line-height: 1; }
+        .rank-text { font-size: 1rem; margin-top: 5px; color: #795548; font-weight: bold; }
+
+        /* Ladder Area */
+        .game-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255,255,255,0.8);
+        }
+
+        .ladder { display: flex; flex-direction: column-reverse; gap: 6px; }
+
+        .step {
+            height: 40px;
+            border-radius: 10px;
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 0.9rem;
+            position: relative;
+            background: white;
+            border: 2px solid #ddd;
+            transition: 0.3s;
         }
 
-        .reset-btn { background: #ff7043; flex: 1; }
+        /* Milestone Styling */
+        .step.daily-bonus { border-color: #ffb74d; background: #fff3e0; }
+        .step.weekly-bonus { border-color: #4fc3f7; background: #e1f5fe; border-width: 3px; }
+        
+        .step.done { background: #c8e6c9; border-color: #81c784; opacity: 0.7; }
+        .step.active { 
+            background: #fff176; 
+            border-color: #fbc02d; 
+            transform: scale(1.03); 
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .step-label { font-weight: 500; }
+        .step-reward { margin-left: auto; font-size: 0.75rem; color: #e64a19; }
+
+        .player { position: absolute; right: -5px; font-size: 1.5rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+
+        /* Task Menu */
+        .task-menu {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+        }
+
+        .task-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 15px;
+            border: none;
+            background: #f1f8e9;
+            color: #33691e;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .task-btn:active { transform: scale(0.98); }
+        .task-btn span:last-child { background: var(--grass); color: white; padding: 2px 10px; border-radius: 10px; }
+        
+        .reset-link { text-align: center; font-size: 0.8rem; color: #999; margin-top: 10px; text-decoration: underline; }
+
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div class="app-card">
-    <h2>🏆 บันไดนักอ่าน</h2>
-    
-    <div class="score-panel">
-        <div class="score-num" id="pts">0</div>
-        <div id="status" style="font-size: 0.9rem; font-weight: bold;">กำลังเริ่มต้น...</div>
+<div class="app-container">
+    <div class="header">
+        <span>📖 ReadingQuest</span>
+        <span id="datetime">--/--/-- --:--</span>
     </div>
 
-    <div class="ladder-scroll">
-        <div class="ladder" id="ladderDisplay"></div>
+    <div class="stats-card">
+        <div class="total-score" id="totalScore">0</div>
+        <div class="rank-text" id="rankText">Rank: Beginner</div>
     </div>
 
-    <div class="task-list">
-        <div class="task-item">
-            <span class="task-text">📖 ทบทวนบทเรียน 30 นาที</span>
-            <button onclick="updatePoints(1)">+1 แต้ม</button>
-        </div>
-        <div class="task-item">
-            <span class="task-text">📝 ทำแบบฝึกหัด 30 นาที</span>
-            <button onclick="updatePoints(1)">+1 แต้ม</button>
-        </div>
-        <div class="task-item">
-            <span class="task-text">💡 สรุปบทเรียน (มือถือ 10 นาที)</span>
-            <button onclick="updatePoints(1)">+1 แต้ม</button>
-        </div>
+    <div class="game-area">
+        <div class="ladder" id="ladder"></div>
+    </div>
+
+    <div class="task-menu">
+        <button class="task-btn" onclick="addScore(1)">
+            <span>📖 อ่านหนังสือ/ทบทวน (30น.)</span> <span>+1</span>
+        </button>
+        <button class="task-btn" onclick="addScore(2)">
+            <span>🔥 วิชายาก/ทำโจทย์ใหญ่ (45น.)</span> <span>+2</span>
+        </button>
+        <button class="task-btn" style="background:#e3f2fd; color:#0d47a1;" onclick="addScore(1)">
+            <span>📝 สรุปความรู้สั้นๆ</span> <span>+1</span>
+        </button>
         
-        <div class="footer-btns">
-            <button class="reset-btn" onclick="resetPoints()">เริ่มวันใหม่</button>
-        </div>
+        <div class="reset-link" onclick="resetGame()">เริ่มสัปดาห์ใหม่ / ล้างแต้ม</div>
     </div>
 </div>
 
 <script>
-    let currentPoints = parseInt(localStorage.getItem('readingPoints')) || 0;
-    const totalSteps = 18;
+    let score = parseInt(localStorage.getItem('study_score')) || 0;
+    const maxScore = 18;
 
-    function initLadder() {
-        const container = document.getElementById('ladderDisplay');
-        container.innerHTML = '';
-        for (let i = 1; i <= totalSteps; i++) {
+    // ระบบวันเวลา
+    function updateTime() {
+        const now = new Date();
+        const options = { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('datetime').innerText = now.toLocaleDateString('th-TH', options);
+    }
+    setInterval(updateTime, 1000);
+
+    // สร้างบันไดตามเงื่อนไขที่ผู้ใช้กำหนด
+    function buildLadder() {
+        const ladder = document.getElementById('ladder');
+        ladder.innerHTML = '';
+        
+        for (let i = 1; i <= maxScore; i++) {
             const step = document.createElement('div');
             step.className = 'step';
-            step.id = `s-${i}`;
+            step.id = `step-${i}`;
+
+            let rewardMsg = "";
             
-            let label = `ขั้นที่ ${i}`;
-            if(i === 3) label = `🥉 ขั้น 3: เล่นมือถือ 10น.`;
-            if(i === 10) label = `🎁 ขั้น 10: Bronze`;
-            if(i === 15) label = `🥈 ขั้น 15: Silver`;
-            if(i === 18) label = `🏆 ขั้น 18: รางวัลใหญ่!`;
+            // เงื่อนไขทุก 3 ขั้น (รางวัลรายวัน)
+            if (i % 3 === 0 && i % 6 !== 0) {
+                step.classList.add('daily-bonus');
+                rewardMsg = "🎁 พักมือถือ 15 นาที";
+            }
             
-            step.innerHTML = `<span>${label}</span>`;
-            container.appendChild(step);
+            // เงื่อนไขทุก 6 ขั้น (รางวัลประจำสัปดาห์ / Rank)
+            if (i === 6) {
+                step.classList.add('weekly-bonus');
+                rewardMsg = "🥉 BRONZE: ขนม/ไอศกรีม";
+            } else if (i === 12) {
+                step.classList.add('weekly-bonus');
+                rewardMsg = "🥈 SILVER: ดูหนัง 1 เรื่อง";
+            } else if (i === 18) {
+                step.classList.add('weekly-bonus');
+                rewardMsg = "🏆 GOLD: รางวัลใหญ่ประจำสัปดาห์!";
+            }
+
+            step.innerHTML = `
+                <span class="step-label">ขั้นที่ ${i}</span>
+                <span class="step-reward">${rewardMsg}</span>
+            `;
+            ladder.appendChild(step);
         }
         render();
     }
 
-    function render() {
-        document.getElementById('pts').innerText = currentPoints;
-        const status = document.getElementById('status');
-        
-        // อัปเดตสถานะตัวอักษร
-        if(currentPoints >= 18) status.innerText = "เก่งมาก! ถึงรางวัลใหญ่แล้ว";
-        else if(currentPoints >= 15) status.innerText = "ระดับ Silver (พัก 1 ชม.)";
-        else if(currentPoints >= 10) status.innerText = "ระดับ Bronze (พัก 30 นาที)";
-        else if(currentPoints >= 3) status.innerText = "ได้สิทธิ์มือถือ 10 นาที";
-        else status.innerText = "พยายามเข้า! รางวัลรออยู่";
+    function addScore(points) {
+        score += points;
+        if (score > maxScore) score = maxScore;
+        localStorage.setItem('study_score', score);
+        render();
+        checkAlerts(points);
+    }
 
-        // วาดสีขั้นบันได
-        for (let i = 1; i <= totalSteps; i++) {
-            const el = document.getElementById(`s-${i}`);
+    function render() {
+        document.getElementById('totalScore').innerText = score;
+        
+        // อัปเดต Rank
+        const rankTxt = document.getElementById('rankText');
+        if (score >= 18) rankTxt.innerHTML = "Rank: <span style='color:#fbc02d'>GOLD MASTER 👑</span>";
+        else if (score >= 12) rankTxt.innerHTML = "Rank: <span style='color:#90a4ae'>SILVER ELITE</span>";
+        else if (score >= 6) rankTxt.innerHTML = "Rank: <span style='color:#a1887f'>BRONZE CHALLENGER</span>";
+        else rankTxt.innerText = "Rank: Beginner";
+
+        // อัปเดตสถานะขั้นบันได
+        for (let i = 1; i <= maxScore; i++) {
+            const el = document.getElementById(`step-${i}`);
             el.classList.remove('active', 'done');
             const p = el.querySelector('.player');
             if(p) p.remove();
 
-            if (i < currentPoints) {
+            if (i < score) {
                 el.classList.add('done');
-            } else if (i === currentPoints && currentPoints > 0) {
+            } else if (i === score && score > 0) {
                 el.classList.add('active');
-                el.innerHTML += `<span class="player">👦</span>`;
-                // เลื่อนหน้าจอไปหาตัวละครอัตโนมัติ
+                el.innerHTML += `<span class="player">🏃</span>`;
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
     }
 
-    function updatePoints(val) {
-        if (currentPoints < totalSteps) {
-            currentPoints += val;
-            localStorage.setItem('readingPoints', currentPoints);
+    function checkAlerts(added) {
+        if (score % 3 === 0 && score % 6 !== 0) {
+            alert("ยินดีด้วย! รับรางวัลรายวัน: พักเล่นมือถือ 15 นาที 🎉");
+        } else if (score === 6 || score === 12 || score === 18) {
+            alert("สุดยอด! คุณเลื่อนระดับ Rank ใหม่แล้ว! อย่าลืมไปรับรางวัลใหญ่ 🎁");
+        }
+    }
+
+    function resetGame() {
+        if (confirm("ต้องการล้างแต้มเพื่อเริ่มรอบใหม่ใช่ไหม?")) {
+            score = 0;
+            localStorage.setItem('study_score', 0);
             render();
         }
     }
 
-    function resetPoints() {
-        if(confirm("ต้องการเริ่มสะสมแต้มใหม่หรือไม่?")) {
-            currentPoints = 0;
-            localStorage.setItem('readingPoints', 0);
-            render();
-        }
-    }
-
-    window.onload = initLadder;
+    updateTime();
+    buildLadder();
 </script>
 
 </body>
